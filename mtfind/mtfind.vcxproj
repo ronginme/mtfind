@@ -137,10 +137,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="FindData.cpp" />
+    <ClCompile Include="FoundDataStorage.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Position.cpp" />
+    <ClCompile Include="SubstringSeeker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FindData.h" />
+    <ClInclude Include="FoundDataStorage.h" />
+    <ClInclude Include="Position.h" />
+    <ClInclude Include="SubstringSeeker.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

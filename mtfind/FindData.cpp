@@ -1,9 +1,6 @@
-
-
 #include <iostream>
-#include <boost/regex.hpp>
-
 #include "FindData.h"
+#include "SubstringSeeker.h"
 
 void FindData::ReadThread(void * arg)
 {
@@ -55,7 +52,7 @@ void FindData::CheckThread(void * arg)
         auto &item = *(obj->buffer_.rbegin());
         Position pos;
         pos.Line = item.first;
-        if (MatchChecker::IsMatchByMask(obj->mask_, pos, item.second))
+        if (SubstringSeeker::FoundByRegexMask(obj->mask_, pos, item.second))
           obj->foundData_.AddFoundData(pos, item.second);
 
         obj->buffer_.erase(item.first);
@@ -67,15 +64,16 @@ void FindData::CheckThread(void * arg)
 void FindData::CheckDispatchThread(void * arg)
 {
   FindData* obj = (FindData*)arg;
-  boost::thread checkThread{ CheckThread, obj };
-  checkThread.join();
+  const int threadCount = 10;
+  boost::thread_group checkGrp;
+  for (auto i = 0; i < threadCount; ++i)
+    checkGrp.create_thread( boost::bind(CheckThread, obj));
+
+  checkGrp.join_all();
 }
 
-FindData::FindData(const char * filename, const char * mask)
+void FindData::AlterMaskToRegex()
 {
-  filename_ = filename;
-  mask_ = mask;
-
   auto pos = mask_.find("?");
   while (pos != std::string::npos)
   {
@@ -84,8 +82,16 @@ FindData::FindData(const char * filename, const char * mask)
   }
 }
 
+FindData::FindData(const char * filename, const char * mask)
+{
+  filename_ = filename;
+  mask_ = mask;
+  AlterMaskToRegex();
+}
+
 FindData::~FindData()
 {
+  buffer_.clear();
 }
 
 void FindData::BeginFinding(WaitMode mode)
@@ -99,67 +105,7 @@ void FindData::BeginFinding(WaitMode mode)
   }
 }
 
-const FoundData * FindData::GetFound() const
+const FoundDataStorage * FindData::GetFound() const
 {
   return &foundData_;
-}
-
-FoundData::FoundData()
-{
-}
-
-FoundData::FoundData(const FoundData & src)
-{
-  std::map<Position, std::string> tmp(src.foundData_);
-  foundData_.swap(tmp);
-}
-
-FoundData & FoundData::operator=(const FoundData & src)
-{
-  std::map<Position, std::string> tmp(src.foundData_);
-  foundData_.swap(tmp);
-  return *this;
-}
-
-FoundData::~FoundData()
-{
-}
-
-size_t FoundData::GetCount() const
-{
-  return foundData_.size();
-}
-
-std::map<Position, std::string> FoundData::GetData() const
-{
-  std::map<Position, std::string> tmp(foundData_);
-  return tmp;
-}
-
-void FoundData::AddFoundData(Position position, std::string data)
-{
-  foundData_.emplace(position, data);
-}
-
-bool Position::operator<(const Position & src) const
-{
-  return Line < src.Line;
-}
-
-bool MatchChecker::IsMatchByMask(std::string mask, Position& position, std::string& str)
-{
-
-  std::string Mask = mask;
-  std::string Str = str;
-
-  boost::smatch matchResults;
-  boost::regex regEx(Mask);
-
-  auto isMatch = boost::regex_search(Str.cbegin(), Str.cend(), matchResults, regEx);
-  if (isMatch)
-  {
-    position.Column = str.find(matchResults.str());
-    str = matchResults.str();
-  }
-  return isMatch;
 }

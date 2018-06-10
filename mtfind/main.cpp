@@ -56,15 +56,18 @@ int main(int argc, char** argv)
   StartCounter();
 #endif
 
-  auto found = findData.GetFound();
-  //std::cout << "Result:" << std::endl;
-  std::cout << found->GetCount() << std::endl;
-  for (auto data : found->GetData())
   {
-    std::cout << data.first.Line << " "
-      << data.first.Column << " "
-      << data.second << std::endl;
+    auto found = findData.GetFound();
+    //std::cout << "Result:" << std::endl;
+    std::cout << found->GetCount() << std::endl;
+    for (auto data : found->GetData())
+    {
+      std::cout << data.first.Line << " "
+        << data.first.Column << " "
+        << data.second << std::endl;
+    }
   }
+
 #if defined(USE_PERFCOUNTER)
   std::cout << "\nFinding : " << findingCounter << " ms" << std::endl;
   std::cout << "Printing: " << GetCounter() << " ms" << std::endl;
