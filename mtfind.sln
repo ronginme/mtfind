@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mtfind", "mtfind\mtfind.vcxproj", "{E5C3DCFD-37E2-47EC-8587-43BA685F98DD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTests", "UnitTests\UnitTests.vcxproj", "{3B1D5690-019B-4A55-925C-7AFE9192531C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{E5C3DCFD-37E2-47EC-8587-43BA685F98DD}.Release|x64.Build.0 = Release|x64
 		{E5C3DCFD-37E2-47EC-8587-43BA685F98DD}.Release|x86.ActiveCfg = Release|Win32
 		{E5C3DCFD-37E2-47EC-8587-43BA685F98DD}.Release|x86.Build.0 = Release|Win32
+		{3B1D5690-019B-4A55-925C-7AFE9192531C}.Debug|x64.ActiveCfg = Debug|x64
+		{3B1D5690-019B-4A55-925C-7AFE9192531C}.Debug|x64.Build.0 = Debug|x64
+		{3B1D5690-019B-4A55-925C-7AFE9192531C}.Debug|x86.ActiveCfg = Debug|Win32
+		{3B1D5690-019B-4A55-925C-7AFE9192531C}.Debug|x86.Build.0 = Debug|Win32
+		{3B1D5690-019B-4A55-925C-7AFE9192531C}.Release|x64.ActiveCfg = Release|x64
+		{3B1D5690-019B-4A55-925C-7AFE9192531C}.Release|x64.Build.0 = Release|x64
+		{3B1D5690-019B-4A55-925C-7AFE9192531C}.Release|x86.ActiveCfg = Release|Win32
+		{3B1D5690-019B-4A55-925C-7AFE9192531C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
