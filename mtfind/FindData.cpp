@@ -77,7 +77,7 @@ void FindData::AlterMaskToRegex()
   auto pos = mask_.find("?");
   while (pos != std::string::npos)
   {
-    mask_ = mask_.replace(pos, pos + 1, ".");
+    mask_[pos] = '.';
     pos = mask_.find('?', 1);
   }
 }
