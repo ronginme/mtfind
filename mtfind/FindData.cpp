@@ -1,52 +1,87 @@
 
-#include <boost/thread.hpp>
+
 #include <iostream>
-#include <fstream>
+#include <boost/regex.hpp>
 
 #include "FindData.h"
 
 void FindData::ReadThread(void * arg)
 {
   FindData* obj = (FindData*)arg;
-  std::ifstream in(obj->filename_.c_str());
-  std::string line;
-
-
-  while (getline(in, line))
+  obj->in_.open(obj->filename_.c_str());
+  if (obj->in_.fail())
   {
-    std::string tmp = line;
-    // TODO 
-    // 0 if no room in shmem wait.
-    // 1 read bytes from file.
-    // 2 add bytes to shared memory.
+    std::cout << "File " << obj->filename_ << " not found." << std::endl;
+    return;
+  }
+
+  std::string line;
+  size_t lineIndex = 0;;
+  getline(obj->in_, line);
+  while (true)
+  {
+    {
+      boost::lock_guard<boost::mutex> guard(obj->mtx_);
+      obj->buffer_.emplace(++lineIndex, line);
+
+      if (obj->in_.eof())
+      {
+        obj->in_.close();
+        break;
+      }
+      getline(obj->in_, line);
+    }
   }
 }
 
-void FindData::CheckThread(void * arg, void * data)
+void FindData::CheckThread(void * arg)
 {
-  // TODO
-  // 1 pop bytes from shared memory.
-  // 2 check match.
-  // 3 if match add foundData.
-
   FindData* obj = (FindData*)arg;
-  std::string line((const char*)data);
-  Position pos;
-  if (obj->IsMatch(pos, line))
-    obj->foundData_.AddFoundData(pos, line);
+
+  while (true)
+  {
+    {
+      boost::lock_guard<boost::mutex> guard(obj->mtx_);
+      bool isOpened = obj->in_.is_open();
+      bool isBufferEmpty = obj->buffer_.empty();
+
+      if (!isOpened && isBufferEmpty)
+      {
+        break;
+      }
+
+      if (!isBufferEmpty)
+      {
+        auto &item = *(obj->buffer_.rbegin());
+        Position pos;
+        pos.Line = item.first;
+        if (MatchChecker::IsMatchByMask(obj->mask_, pos, item.second))
+          obj->foundData_.AddFoundData(pos, item.second);
+
+        obj->buffer_.erase(item.first);
+      }
+    }
+  }
 }
 
-bool FindData::IsMatch(Position& position, std::string data)
+void FindData::CheckDispatchThread(void * arg)
 {
-  position.Line = this->foundData_.GetCount();
-  position.Column = 321;
-  return true;
+  FindData* obj = (FindData*)arg;
+  boost::thread checkThread{ CheckThread, obj };
+  checkThread.join();
 }
 
 FindData::FindData(const char * filename, const char * mask)
 {
   filename_ = filename;
   mask_ = mask;
+
+  auto pos = mask_.find("?");
+  while (pos != std::string::npos)
+  {
+    mask_ = mask_.replace(pos, pos + 1, ".");
+    pos = mask_.find('?', 1);
+  }
 }
 
 FindData::~FindData()
@@ -56,9 +91,11 @@ FindData::~FindData()
 void FindData::BeginFinding(WaitMode mode)
 {
   boost::thread readThread{ ReadThread, this };
+  boost::thread checkDispThread{ CheckDispatchThread, this };
   if (mode == WAIT_ENDING)
   {
     readThread.join();
+    checkDispThread.join();
   }
 }
 
@@ -107,4 +144,22 @@ void FoundData::AddFoundData(Position position, std::string data)
 bool Position::operator<(const Position & src) const
 {
   return Line < src.Line;
+}
+
+bool MatchChecker::IsMatchByMask(std::string mask, Position& position, std::string& str)
+{
+
+  std::string Mask = mask;
+  std::string Str = str;
+
+  boost::smatch matchResults;
+  boost::regex regEx(Mask);
+
+  auto isMatch = boost::regex_search(Str.cbegin(), Str.cend(), matchResults, regEx);
+  if (isMatch)
+  {
+    position.Column = str.find(matchResults.str());
+    str = matchResults.str();
+  }
+  return isMatch;
 }

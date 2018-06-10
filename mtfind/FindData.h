@@ -2,6 +2,9 @@
 
 #include <map>
 #include <string>
+#include <deque>
+#include <fstream>
+#include <boost/thread.hpp>
 
 enum WaitMode
 {
@@ -33,12 +36,16 @@ public:
 class FindData
 {
 private:
+  boost::mutex mtx_;
+  std::map<size_t, std::string> buffer_;
   std::string filename_;
   std::string mask_;
+  std::ifstream in_;
   static void ReadThread(void* arg);
-  static void CheckThread(void* arg, void* data);
+  static void CheckThread(void* arg);
+  static void CheckDispatchThread(void* arg);
+
   FoundData foundData_;
-  bool IsMatch(Position& position, std::string data);
 public:
   FindData(const char* filename, const char* mask);
   ~FindData();
@@ -46,3 +53,8 @@ public:
   const FoundData* GetFound() const;
 };
 
+class MatchChecker 
+{
+public:
+  static bool IsMatchByMask(std::string mask, Position& position, std::string& str);
+};

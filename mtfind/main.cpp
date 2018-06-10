@@ -3,7 +3,7 @@
 
 #include "FindData.h"
 
-#if defined(DEBUG)
+#if defined(USE_PERFCOUNTER)
 #include <windows.h>
 double PCFreq = 0.0;
 __int64 CounterStart = 0;
@@ -43,14 +43,21 @@ int main(int argc, char** argv)
   const char* filename = argv[1];
   const char* mask = argv[2];
 
-#if defined(DEBUG)
-  std::cout << filename << " " << mask << std::endl;
+#if defined(USE_PERFCOUNTER)
+  //std::cout << filename << " " << mask << std::endl;
   StartCounter();
 #endif
 
   FindData findData(filename, mask);
   findData.BeginFinding(WAIT_ENDING);
+
+#if defined(USE_PERFCOUNTER)
+  auto findingCounter = GetCounter();
+  StartCounter();
+#endif
+
   auto found = findData.GetFound();
+  //std::cout << "Result:" << std::endl;
   std::cout << found->GetCount() << std::endl;
   for (auto data : found->GetData())
   {
@@ -58,11 +65,10 @@ int main(int argc, char** argv)
       << data.first.Column << " "
       << data.second << std::endl;
   }
-
-#if defined(DEBUG)
-  std::cout << GetCounter()<< " ms" << std::endl;
+#if defined(USE_PERFCOUNTER)
+  std::cout << "\nFinding : " << findingCounter << " ms" << std::endl;
+  std::cout << "Printing: " << GetCounter() << " ms" << std::endl;
 #endif
-
   system("pause");
 
   return 0;
