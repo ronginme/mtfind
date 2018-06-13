@@ -1,8 +1,10 @@
 #pragma once
 
+#include <queue>
 #include <fstream>
 #include <boost/thread.hpp>
-#include "FoundDataStorage.h"
+
+#include "FoundData.h"
 
 enum WaitMode
 {
@@ -14,20 +16,19 @@ class FindData
 {
 private:
   boost::mutex mtx_;
-  std::map<size_t, std::string> buffer_;
+  size_t threadCount_;
+  std::deque<FoundData> foundData_;
+  std::ifstream in_;
   std::string filename_;
   std::string mask_;
-  std::ifstream in_;
-  FoundDataStorage foundData_;
 
-  static void ReadThread(void* arg);
-  static void CheckThread(void* arg);
-  static void CheckDispatchThread(void* arg);
+  static void ReadThread(FindData * obj);
+  static void CheckThread(FindData * obj, std::deque<FoundData> * data);
 
   void AlterMaskToRegex();
 public:
   FindData(const char* filename, const char* mask);
   ~FindData();
   void BeginFinding(WaitMode mode);
-  const FoundDataStorage* GetFound() const;
+  const std::deque<FoundData> & GetFound() const;
 };

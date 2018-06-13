@@ -2,9 +2,11 @@
 #include "FindData.h"
 #include "SubstringSeeker.h"
 
-void FindData::ReadThread(void * arg)
+#define THREADCOUNT 20
+#define QUEUELENGTH 200000
+
+void FindData::ReadThread(FindData * obj)
 {
-  FindData* obj = (FindData*)arg;
   obj->in_.open(obj->filename_.c_str());
   if (obj->in_.fail())
   {
@@ -13,63 +15,52 @@ void FindData::ReadThread(void * arg)
   }
 
   std::string line;
-  size_t lineIndex = 0;;
-  getline(obj->in_, line);
-  while (true)
+  std::deque<FoundData> buffer;
+  size_t lineIndex = 0;
+  boost::thread threads[THREADCOUNT];
+  obj->threadCount_ = 0;
+
+  while (!getline(obj->in_, line).eof())
   {
     {
       boost::lock_guard<boost::mutex> guard(obj->mtx_);
-      obj->buffer_.emplace(++lineIndex, line);
-
-      if (obj->in_.eof())
-      {
-        obj->in_.close();
-        break;
-      }
-      getline(obj->in_, line);
+      buffer.push_back(FoundData(++lineIndex, 0, line));
     }
+
+    if (buffer.size() >= QUEUELENGTH && obj->threadCount_ < THREADCOUNT)
+    {
+      (threads[obj->threadCount_++] = boost::thread(CheckThread, obj, &buffer));
+    }
+  }
+  obj->in_.close();
+
+  if (!buffer.empty())
+  {
+    boost::thread th{ CheckThread , obj, &buffer };
+    while(!buffer.empty())
+      boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
   }
 }
 
-void FindData::CheckThread(void * arg)
+void FindData::CheckThread(FindData * obj, std::deque<FoundData> * data)
 {
-  FindData* obj = (FindData*)arg;
-
-  while (true)
+  std::deque<FoundData> fileData;
   {
+    boost::lock_guard<boost::mutex> guard(obj->mtx_);
+    fileData = *data;
+    data->clear();
+  }
+
+  for (auto data : fileData)
+  {
+    auto res = SubstringSeeker::AllMatchesByMask(obj->mask_, data);
+    for (auto r : res)
     {
       boost::lock_guard<boost::mutex> guard(obj->mtx_);
-      bool isOpened = obj->in_.is_open();
-      bool isBufferEmpty = obj->buffer_.empty();
-
-      if (!isOpened && isBufferEmpty)
-      {
-        break;
-      }
-
-      if (!isBufferEmpty)
-      {
-        auto &item = *(obj->buffer_.rbegin());
-        Position pos;
-        pos.Line = item.first;
-        if (SubstringSeeker::FoundByRegexMask(obj->mask_, pos, item.second))
-          obj->foundData_.AddFoundData(pos, item.second);
-
-        obj->buffer_.erase(item.first);
-      }
+      obj->foundData_.push_back(r);
     }
   }
-}
-
-void FindData::CheckDispatchThread(void * arg)
-{
-  FindData* obj = (FindData*)arg;
-  const int threadCount = 10;
-  boost::thread_group checkGrp;
-  for (auto i = 0; i < threadCount; ++i)
-    checkGrp.create_thread( boost::bind(CheckThread, obj));
-
-  checkGrp.join_all();
+  --obj->threadCount_;
 }
 
 void FindData::AlterMaskToRegex()
@@ -91,21 +82,18 @@ FindData::FindData(const char * filename, const char * mask)
 
 FindData::~FindData()
 {
-  buffer_.clear();
 }
 
 void FindData::BeginFinding(WaitMode mode)
 {
   boost::thread readThread{ ReadThread, this };
-  boost::thread checkDispThread{ CheckDispatchThread, this };
   if (mode == WAIT_ENDING)
   {
     readThread.join();
-    checkDispThread.join();
   }
 }
 
-const FoundDataStorage * FindData::GetFound() const
+const std::deque<FoundData> & FindData::GetFound() const
 {
-  return &foundData_;
+  return foundData_;
 }

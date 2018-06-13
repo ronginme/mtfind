@@ -24,10 +24,7 @@
     <ClCompile Include="SubstringSeeker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Position.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FoundDataStorage.cpp">
+    <ClCompile Include="FoundData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,10 +35,7 @@
     <ClInclude Include="SubstringSeeker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Position.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FoundDataStorage.h">
+    <ClInclude Include="FoundData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

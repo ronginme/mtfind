@@ -5,6 +5,6 @@
 class SubstringSeeker
 {
 public:
-  static bool FoundByRegexMask(std::string mask, Position& position, std::string& str);
+  static std::deque<FoundData> AllMatchesByMask(std::string mask, FoundData fd);
 };
 
