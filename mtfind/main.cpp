@@ -59,13 +59,11 @@ int main(int argc, char** argv)
   std::cout << "Result:" << std::endl;
   auto found = findData.GetFound();
   std::cout << found.size() << std::endl;
-  for (auto i = 0; i < found.size(); ++i)
+  for (auto i = found.begin(); i != found.end(); ++i)
   {
-    FoundData& fdata = found.at(i);
-
-    std::cout << fdata.lineNum << " "
-      << fdata.columnNum << " "
-      << fdata.data << std::endl;
+    std::cout << i->first.lineNum << " "
+      << i->first.columnNum << " "
+      << i->second<< std::endl;
   }
 
 

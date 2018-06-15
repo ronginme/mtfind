@@ -1,6 +1,7 @@
 #pragma once
 
-#include <queue>
+#include <map>
+#include <deque>
 #include <fstream>
 #include <boost/thread.hpp>
 
@@ -17,7 +18,7 @@ class FindData
 private:
   boost::mutex mtx_;
   size_t threadCount_;
-  std::deque<FoundData> foundData_;
+  std::map<Position, std::string> foundData_;
   std::ifstream in_;
   std::string filename_;
   std::string mask_;
@@ -30,5 +31,5 @@ public:
   FindData(const char* filename, const char* mask);
   ~FindData();
   void BeginFinding(WaitMode mode);
-  const std::deque<FoundData> & GetFound() const;
+  const std::map<Position, std::string> & GetFound() const;
 };

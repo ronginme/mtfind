@@ -57,7 +57,7 @@ void FindData::CheckThread(FindData * obj, std::deque<FoundData> * data)
     for (auto r : res)
     {
       boost::lock_guard<boost::mutex> guard(obj->mtx_);
-      obj->foundData_.push_back(r);
+      obj->foundData_.emplace(Position(r.lineNum, r.columnNum),r.data);
     }
   }
   --obj->threadCount_;
@@ -93,7 +93,7 @@ void FindData::BeginFinding(WaitMode mode)
   }
 }
 
-const std::deque<FoundData> & FindData::GetFound() const
+const std::map<Position, std::string> & FindData::GetFound() const
 {
   return foundData_;
 }

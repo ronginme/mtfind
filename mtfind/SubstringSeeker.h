@@ -1,5 +1,5 @@
 #pragma once
-
+#include <deque>
 #include "FindData.h"
 
 class SubstringSeeker

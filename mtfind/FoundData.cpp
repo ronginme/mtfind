@@ -21,3 +21,22 @@ FoundData & FoundData::operator=(const FoundData & src)
   data = src.data;
   return *this;
 }
+
+Position::Position(size_t lineNum, size_t columnNum)
+{
+  this->lineNum = lineNum;
+  this->columnNum = columnNum;
+}
+
+Position::Position(const Position & src)
+{
+  lineNum = src.lineNum;
+  columnNum = src.columnNum;
+}
+
+Position & Position::operator=(const Position & src)
+{
+  lineNum = src.lineNum;
+  columnNum = src.columnNum;
+  return *this;
+}
